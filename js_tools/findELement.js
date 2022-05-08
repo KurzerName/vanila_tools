@@ -1,74 +1,35 @@
 /**
  * Скрипт для поиска элемента по его селектору
- *
  */
 
 /**
- * Метод поиска элемента по его селектору
+ * Метод поиска дочернего элемента по его селектору
  *
  * @param element
- * @param selector
+ * @param query
+ *
+ * @return {HTMLElement | null}
  */
-function findChildELementBySelector(element, selector) {
-    let row           = 0;
-    let stop          = 0;
-    let column        = 0;
-    let columnUpValue = 0;
-    let find          = false;
-    let children      = element.children;
-    let child         = [];
+function findChildElementBySelector(element, query) {
+    const allChildrenElements = element.getElementsByTagName('*');
+    const attributes          = getAttributesAndValuesFromQuery(query);
+    const selectors           = getSelectorsFromQuery(query);
+    const hasAttributes       = Object.values(attributes).length > 0;
+    let isMatch               = false;
 
-    // checkElementRow(children, children.length)
+    for (child of allChildrenElements) {
+        isMatch = checkElementForSelectors(child, selectors)
 
-    while (true) {
-        stop++;
-
-        if (stop === 10) {
-            break;
+        if (hasAttributes) {
+            isMatch = checkElementForAttributes(child, attributes)
         }
 
-        // if (checkElementRow(children, selector)) {
-        //     return 1111;
-        // }
-
-        console.log(children)
-
-        if (!children.length) {
-            row++;
-
-            if (row >= child.parentElement.children.length) {
-                row = 0;
-            }
-
-            let newBranch = child.parentElement.children[row]?.children;
-
-            console.log(child.parentElement?.lastElementChild)
-
-            if (child.parentElement?.lastElementChild === child) {
-                newBranch = child.parentElement.parentElement.children;
-
-                columnUpValue++;
-            }
-
-            if (!newBranch.length) {
-                newBranch = takeParentWithMoreChildren(child);
-            }
-
-            children = newBranch;
-            column++;
-
-            continue;
+        if (isMatch) {
+            return child;
         }
-
-        if (column >= children.length) {
-            column = columnUpValue;
-        }
-
-        child    = children[column];
-        children = children[column].children;
-
-        column++;
     }
+
+    return null;
 }
 
 /**
@@ -80,24 +41,12 @@ function findChildELementBySelector(element, selector) {
  * @return {HTMLElement | null}
  */
 function findParentElementBySelector(element, query) {
-    let iteration     = 0;
-    let maxIteration  = 50;
-    let attributes    = getAttributesAndValuesFromQuery(query);
-    let selectors     = getSelectorsFromQuery(query);
-    let hasAttributes = Object.values(attributes).length > 0;
-    let hasSelectors  = Object.values(selectors).length > 0;
+    const attributes    = getAttributesAndValuesFromQuery(query);
+    const selectors     = getSelectorsFromQuery(query);
+    const hasAttributes = Object.values(attributes).length > 0;
+    let isMatch         = false;
 
-    let isMatch = false;
-
-    while (true) {
-        if (iteration >= maxIteration) {
-            return  null;
-        }
-
-        if (!element) {
-            return null;
-        }
-
+    while (element) {
         isMatch = checkElementForSelectors(element, selectors)
 
         if (hasAttributes) {
@@ -109,8 +58,9 @@ function findParentElementBySelector(element, query) {
         }
 
         element = element.parentElement;
-        maxIteration++;
     }
+
+    return null;
 }
 
 /**
@@ -158,7 +108,7 @@ function getSelectorsFromQuery(query) {
     prepareQuery     = prepareQuery.replaceAll(/\[(.*?)\]/g, ''); // удаляем все доа атрибуты (Всё что в [])
 
     let getSelectorId = prepareQuery.split('#');
-    let tag           = getSelectorId.length > 1 ? getSelectorId[0] : '';
+    let tag           = getSelectorId.length > 1 ? (getSelectorId[0] === '' ? null : '') : '';
     let id            = getSelectorId.length > 1 ? getSelectorId[1].split('.')[0] : '';
     let classes       = [];
 
@@ -216,15 +166,15 @@ function checkElementForAttributes(element, attributes) {
 function checkElementForSelectors(element, selectors) {
     let isMatch = false;
 
-    if (selectors.tag !== '') {
+    if (selectors.tag) {
         isMatch = element.tagName === selectors.tag.toUpperCase();
     }
 
-    if (selectors.id !== '') {
+    if (selectors.id) {
         isMatch = element.getAttribute('id') === selectors.id;
     }
 
-    if (selectors.classes.length !== 0) {
+    if (selectors.classes.length) {
         for (className of selectors.classes) {
             if (!element.classList.contains(className)) {
                 isMatch = false;
@@ -237,33 +187,4 @@ function checkElementForSelectors(element, selectors) {
     }
 
     return isMatch;
-}
-
-function checkElementRow(elements, selector) {
-    let result = false;
-
-    Array.from(elements).forEach(element => {
-        // console.log(element)
-        //
-        if (element.getAttribute('id') === selector) {
-            result = element;
-        }
-    })
-
-    // console.log(result)
-    return result;
-}
-
-function takeParentWithMoreChildren(element) {
-    let result = element;
-
-    while (true) {
-        if (result.children.length <= 1) {
-            result = result.parentElement;
-
-            continue;
-        }
-
-        return result.children;
-    }
 }
