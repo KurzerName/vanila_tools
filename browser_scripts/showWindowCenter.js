@@ -1,4 +1,4 @@
-function showWindowCenter() {
+(function showWindowCenter() {
     let width = window.innerWidth;
     let div   = document.getElementById('show-window-center-div');
 
@@ -19,4 +19,4 @@ function showWindowCenter() {
 `;
 
     document.body.appendChild(div);
-}
+})()
